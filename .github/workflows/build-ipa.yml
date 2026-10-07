@@ -40,6 +40,10 @@ jobs:
           set -e
           APP_PATH="build/3105.xcarchive/Products/Applications/3105.app"
           test -d "$APP_PATH"
+          echo "Bundled 3105 packages:"
+          find "$APP_PATH" -maxdepth 1 -type f -name '*.3105' -print
+          test -f "$APP_PATH/HS-CABEZA ATN.3105"
+          test -f "$APP_PATH/HS-CUELLO ATN.3105"
           rm -rf build/Payload build/3105-unsigned.ipa
           mkdir -p build/Payload
           cp -R "$APP_PATH" build/Payload/3105.app
