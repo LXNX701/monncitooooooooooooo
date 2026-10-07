@@ -193,8 +193,8 @@ private struct MoonX7ModePicker: View {
 private struct MoonX7Home: View {
     let openInstalled: () -> Void
     let openPreview: () -> Void
+    @Binding var mode: MoonX7Mode
     let settings: () -> Void
-    @State private var mode: MoonX7Mode = .ffth
 
     var body: some View {
         NavigationStack {
@@ -308,9 +308,8 @@ private struct MoonX7MiniSocial: View {
 
 private struct MoonX7Installed: View {
     @EnvironmentObject private var store: PatchProjectStore
-    @State private var mode: MoonX7Mode = .ffth
+    @Binding var mode: MoonX7Mode
     @State private var search = ""
-     @Binding var mode: MoonX7Mode
     let settings: () -> Void
 
     private var items: [PatchLibraryItem] {
