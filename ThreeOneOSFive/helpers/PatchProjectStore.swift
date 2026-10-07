@@ -40,6 +40,9 @@ final class PatchProjectStore: ObservableObject {
     init() {
         isBusy = true
         Task.detached(priority: .userInitiated) { [weak self] in
+            // Seed only the real packages shipped in the app bundle, then load the
+            // same library used by imported packages. This keeps the patch engine unchanged.
+            PatchProjectLibrary.seedBundledPackages(password: "moon")
             let loadedItems = PatchProjectLibrary.load()
             await self?.finishInitialLoad(loadedItems)
         }
