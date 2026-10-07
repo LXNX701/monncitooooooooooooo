@@ -57,6 +57,51 @@ enum PatchProjectLibrary {
         return root
     }
 
+    /// Copies the packages shipped with the app into the normal patch library on first launch.
+    /// The bundled packages are real .3105 payloads; the password is only used to unlock them
+    /// through the existing codec before they are persisted to Application Support.
+    static func seedBundledPackages(
+        password: String?,
+        fileManager: FileManager = .default
+    ) {
+        guard let urls = Bundle.main.urls(forResourcesWithExtension: "3105", subdirectory: nil) else {
+            return
+        }
+
+        for sourceURL in urls {
+            do {
+                let data = try readPackage(at: sourceURL)
+                let summary = try PatchPackageCodec.inspect(data)
+                let destination = try packageRootURL(fileManager: fileManager)
+                    .appendingPathComponent(sourceURL.lastPathComponent)
+
+                if fileManager.fileExists(atPath: destination.path) {
+                    continue
+                }
+
+                let decoded: DecodedPatchPackage
+                if summary.isPasswordProtected {
+                    guard let password, !password.isEmpty else { continue }
+                    decoded = try PatchPackageCodec.decode(data, password: password)
+                } else {
+                    decoded = try PatchPackageCodec.decode(data, password: nil)
+                }
+
+                _ = try installImportedPackage(
+                    data: data,
+                    decoded: decoded,
+                    summary: summary,
+                    existingURL: nil,
+                    origin: nil,
+                    fileManager: fileManager
+                )
+                log("patch: preloaded (sourceURL.lastPathComponent)")
+            } catch {
+                log("patch: failed to preload (sourceURL.lastPathComponent): (error)")
+            }
+        }
+    }
+
     static func load(fileManager: FileManager = .default) -> [PatchLibraryItem] {
         guard let root = try? packageRootURL(fileManager: fileManager),
               let urls = try? fileManager.contentsOfDirectory(
