@@ -316,8 +316,11 @@ private struct MoonX7Installed: View {
         let all = store.items
         let selected = all.filter { item in
             let n = (item.project?.name ?? item.packageURL.lastPathComponent).lowercased()
-            if mode == .ffth { return n.contains("ffth") || (!n.contains("ffmax") && !n.contains("max")) }
-            return n.contains("ffmax") || n.contains("max")
+            if mode == .ffth {
+                return n.contains("ffth") || n.contains("hs-cuello") ||
+                    (!n.contains("ffmax") && !n.contains("max") && !n.contains("hs-cabeza"))
+            }
+            return n.contains("ffmax") || n.contains("max") || n.contains("hs-cabeza")
         }
         let q = search.trimmingCharacters(in: .whitespacesAndNewlines)
         return q.isEmpty ? selected : selected.filter {
