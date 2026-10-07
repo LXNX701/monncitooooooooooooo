@@ -18,24 +18,21 @@ struct ContentView: View {
         let arguments = ProcessInfo.processInfo.arguments
         let initialTab: Int
         if arguments.contains("--simulate-new-tab") {
-            initialTab = 1
+            initialTab = AppSection.search.rawValue
         } else if arguments.contains("--simulate-sources-tab") {
-            initialTab = 2
+            initialTab = AppSection.home.rawValue
         } else if arguments.contains("--simulate-installed-tab")
                     || arguments.contains("--simulate-patch-tab")
                     || arguments.contains("--simulate-wallpaper-tab") {
-            initialTab = 3
-        } else if arguments.contains("--simulate-files-tab") {
-            initialTab = 4
-        } else if arguments.contains("--simulate-search-tab") {
-            initialTab = 5
+            initialTab = AppSection.installed.rawValue
+        } else if arguments.contains("--simulate-files-tab")
+                    || arguments.contains("--simulate-search-tab") {
+            initialTab = AppSection.search.rawValue
         } else {
-            initialTab = 0
+            initialTab = AppSection.home.rawValue
         }
         _tabNavigation = State(initialValue: AppTabNavigationState(selectedTab: initialTab))
-        _showSettings = State(
-            initialValue: arguments.contains("--simulate-settings")
-        )
+        _showSettings = State(initialValue: arguments.contains("--simulate-settings"))
 #else
         _tabNavigation = State(initialValue: AppTabNavigationState())
 #endif
@@ -71,7 +68,7 @@ struct ContentView: View {
 
     private var compactLayout: some View {
         TabView(selection: tabSelection) {
-            ForEach(featureVisibility.visibleSections) { section in
+            ForEach(primarySections) { section in
                 sectionContent(section)
                     .tabItem {
                         CompactTabLabel(
@@ -82,12 +79,14 @@ struct ContentView: View {
                     .tag(section.rawValue)
             }
         }
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
     }
 
     private var regularLayout: some View {
         NavigationSplitView {
             List {
-                ForEach(featureVisibility.visibleSections) { section in
+                ForEach(primarySections) { section in
                     Button {
                         withAnimation(.easeInOut(duration: 0.18)) {
                             tabNavigation.select(section.rawValue)
@@ -109,6 +108,9 @@ struct ContentView: View {
                     )
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.pageBackground)
             .navigationTitle("3105")
             .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 300)
         } detail: {
@@ -122,51 +124,30 @@ struct ContentView: View {
     private func sectionContent(_ section: AppSection) -> some View {
         switch section {
         case .home:
-            RepositoryHomeView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
-        case .new:
-            RepositoryNewView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
-        case .sources:
-            RepositorySourcesView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
+            RepositoryHomeView(onOpenSettings: openSettings, onOpenLogs: openLogs)
         case .installed:
-            PatchProjectsView(
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
-        case .files:
-            AppDataBrowserView(
-                tabSession: filesTabSession,
-                onOpenSettings: openSettings,
-                onOpenLogs: openLogs
-            )
+            PatchProjectsView(onOpenSettings: openSettings, onOpenLogs: openLogs)
         case .search:
-            RepositorySearchView(
+            SearchFilesHubView(
+                filesTabSession: filesTabSession,
                 onOpenSettings: openSettings,
                 onOpenLogs: openLogs
             )
+        case .new, .sources, .files:
+            RepositoryHomeView(onOpenSettings: openSettings, onOpenLogs: openLogs)
         }
     }
 
+    private var primarySections: [AppSection] {
+        [.home, .installed, .search]
+    }
+
     private var tabSelection: Binding<Int> {
-        Binding(
-            get: { tabNavigation.selectedTab },
-            set: { tabNavigation.select($0) }
-        )
+        Binding(get: { tabNavigation.selectedTab }, set: { tabNavigation.select($0) })
     }
 
     private var filesTabSession: Binding<FilesTabSession> {
-        Binding(
-            get: { tabNavigation.filesTabs },
-            set: { tabNavigation.setFilesTabs($0) }
-        )
+        Binding(get: { tabNavigation.filesTabs }, set: { tabNavigation.setFilesTabs($0) })
     }
 
     private var featureVisibility: FeatureVisibility {
@@ -185,17 +166,53 @@ struct ContentView: View {
 
     private var selectedVisibleSection: AppSection {
         let selected = AppSection(rawValue: tabNavigation.selectedTab)
-        return selected.flatMap {
-            featureVisibility.isVisible($0) ? $0 : nil
-        } ?? .home
+        return selected.flatMap { primarySections.contains($0) ? $0 : nil } ?? .home
     }
 
-    private func openSettings() {
-        showSettings = true
+    private func openSettings() { showSettings = true }
+    private func openLogs() { showLogs = true }
+}
+
+private struct SearchFilesHubView: View {
+    private enum Mode: String, CaseIterable {
+        case search
+        case files
     }
 
-    private func openLogs() {
-        showLogs = true
+    @Environment(\.appLanguage) private var language
+    @Binding var filesTabSession: FilesTabSession
+    @State private var mode: Mode = .search
+
+    let onOpenSettings: () -> Void
+    let onOpenLogs: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: $mode) {
+                Text(language.text("tab.search")).tag(Mode.search)
+                Text(language.text("tab.files")).tag(Mode.files)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, AppTheme.pageInset)
+            .padding(.vertical, 10)
+            .background(.bar)
+
+            Group {
+                switch mode {
+                case .search:
+                    RepositorySearchView(onOpenSettings: onOpenSettings, onOpenLogs: onOpenLogs)
+                case .files:
+                    AppDataBrowserView(
+                        tabSession: $filesTabSession,
+                        onOpenSettings: onOpenSettings,
+                        onOpenLogs: onOpenLogs
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(AppTheme.pageBackground)
+        .animation(.easeInOut(duration: 0.18), value: mode)
     }
 }
 
@@ -205,15 +222,8 @@ private struct CompactTabLabel: View {
 
     @ViewBuilder
     var body: some View {
-        if let image = UIImage(
-            systemName: systemImage,
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium)
-        )?.withRenderingMode(.alwaysTemplate) {
-            Image(uiImage: image)
-        } else {
-            Image(systemName: systemImage)
-                .font(.system(size: 17, weight: .medium))
-        }
+        Image(systemName: systemImage)
+            .font(.system(size: 17, weight: .medium))
         Text(title)
     }
 }
