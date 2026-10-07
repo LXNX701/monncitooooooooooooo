@@ -652,7 +652,7 @@ extension View {
     }
 }
 
-private struct PatchProjectDetailView: View {
+struct PatchProjectDetailView: View {
     @Environment(\.appLanguage) private var language
     @ObservedObject var store: PatchProjectStore
     let projectID: UUID
