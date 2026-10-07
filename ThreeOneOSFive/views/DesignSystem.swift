@@ -8,33 +8,27 @@ enum AppTheme {
                 : UIColor(red: 0.85, green: 0.42, blue: 0.20, alpha: 1.00)
         }
     )
-    static let pageBackground = Color(uiColor: .systemBackground)
+    static let pageBackground = Color(uiColor: .systemGroupedBackground)
     static let consoleBackground = Color(uiColor: .secondarySystemBackground)
     static let pageInset: CGFloat = 16
     static let rowIconSize: CGFloat = 17
-    static let rowIconFrame: CGFloat = 28
+    static let rowIconFrame: CGFloat = 30
     static let fileRowIconSize: CGFloat = 17
     static let fileRowIconFrame: CGFloat = 30
     static let fileRowHeight: CGFloat = 60
-    static let appIconSize: CGFloat = 32
+    static let appIconSize: CGFloat = 34
     static let emptyIconSize: CGFloat = 30
     static let selectionIconSize: CGFloat = 18
-    static let contentCardCornerRadius: CGFloat = 20
+    static let contentCardCornerRadius: CGFloat = 22
     static let contentCardInset: CGFloat = 16
     static let contentCardPadding: CGFloat = 16
 }
 
 struct AppCardBorder: View {
     var body: some View {
-        RoundedRectangle(
-            cornerRadius: AppTheme.contentCardCornerRadius,
-            style: .continuous
-        )
-        .strokeBorder(
-            Color(uiColor: .separator).opacity(0.22),
-            lineWidth: 0.5
-        )
-        .accessibilityHidden(true)
+        RoundedRectangle(cornerRadius: AppTheme.contentCardCornerRadius, style: .continuous)
+            .strokeBorder(Color(uiColor: .separator).opacity(0.20), lineWidth: 0.5)
+            .accessibilityHidden(true)
     }
 }
 
@@ -46,10 +40,16 @@ struct AppRowIcon: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(tint.opacity(0.12))
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [tint.opacity(0.20), tint.opacity(0.07)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
             Image(systemName: systemName)
-                .font(.system(size: symbolSize, weight: .medium))
+                .font(.system(size: symbolSize, weight: .semibold))
                 .foregroundStyle(tint)
         }
         .frame(width: frameSize, height: frameSize)
@@ -63,10 +63,10 @@ struct AppSearchField: View {
     let clearLabel: String
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 9) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppTheme.accent)
                 .accessibilityHidden(true)
 
             TextField(prompt, text: $text)
@@ -87,14 +87,18 @@ struct AppSearchField: View {
                 .accessibilityLabel(clearLabel)
             }
         }
-        .padding(.horizontal, 11)
-        .frame(minHeight: 36)
+        .padding(.horizontal, 12)
+        .frame(minHeight: 40)
         .background(
-            Color(uiColor: .secondarySystemFill),
-            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .regularMaterial,
+            in: RoundedRectangle(cornerRadius: 13, style: .continuous)
         )
+        .overlay {
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .strokeBorder(Color(uiColor: .separator).opacity(0.18), lineWidth: 0.5)
+        }
         .padding(.horizontal, AppTheme.pageInset)
-        .padding(.vertical, 8)
+        .padding(.vertical, 9)
         .background(.bar)
     }
 }
