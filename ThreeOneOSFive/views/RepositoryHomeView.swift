@@ -13,6 +13,8 @@ struct RepositoryHomeView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 28) {
+                    MoonX7HomeHeader()
+
                     if feed.isEmpty {
                         emptyContent
                     } else {
@@ -32,7 +34,7 @@ struct RepositoryHomeView: View {
                 await store.refreshAllAndWait()
                 rebuildFeed()
             }
-            .navigationTitle("3105")
+            .navigationTitle("MOON X7")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 AppUtilityToolbar(
