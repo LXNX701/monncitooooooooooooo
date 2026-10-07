@@ -16,6 +16,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             MoonX7Background()
+                .overlay { MoonX7AmbientFX() }
             TabView(selection: $tab) {
                 MoonX7Home(
                     openInstalled: { tab = .installed },
