@@ -487,7 +487,7 @@ private struct MoonX7Previews: View {
 }
 
 private struct MoonX7PreviewCard<Content: View>: View {
-    let title: String; let label: String; let tint: Color; @ViewBuilder let content: () -> Content
+    let title: String; let label: String; let tint: Color; let content: () -> Content
     var body: some View {
         VStack(spacing: 0) {
             content().frame(height: 132).frame(maxWidth: .infinity).clipped()
