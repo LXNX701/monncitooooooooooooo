@@ -1,6 +1,25 @@
 import SwiftUI
 import UIKit
 
+private struct MoonX7AuthSplash: View {
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 14) {
+                AppLogo(size: 70)
+                    .shadow(color: AppTheme.accent.opacity(0.55), radius: 22)
+                Text("MOON X7")
+                    .font(.system(size: 24, weight: .black, design: .rounded))
+                    .tracking(3)
+                    .foregroundStyle(.white)
+                ProgressView()
+                    .tint(AppTheme.accent)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
 @main
 struct ThreeOneOSFiveApp: App {
     @StateObject private var appState = AppState()
@@ -8,6 +27,7 @@ struct ThreeOneOSFiveApp: App {
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
     @StateObject private var patchStore = PatchProjectStore()
     @StateObject private var repositoryStore = PackageRepositoryStore()
+    @StateObject private var licenseAuth = MoonLicenseAuth()
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.english.rawValue
     @State private var showOnboarding = OnboardingStore.shouldShow()
     @State private var showAttribution = false
@@ -34,16 +54,26 @@ struct ThreeOneOSFiveApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ContentView()
-                    .environmentObject(appState)
-                    .environmentObject(patchDraftCoordinator)
-                    .environmentObject(fileOperationCoordinator)
-                    .environmentObject(patchStore)
-                    .environmentObject(repositoryStore)
-                    .environment(\.appLanguage, language)
-                    .environment(\.locale, language.locale)
-                    .opacity(showOnboarding ? 0 : 1)
-                    .allowsHitTesting(!showOnboarding)
+                Group {
+                    if licenseAuth.isChecking {
+                        MoonX7AuthSplash()
+                    } else if licenseAuth.isAuthenticated {
+                        ContentView()
+                            .environmentObject(appState)
+                            .environmentObject(patchDraftCoordinator)
+                            .environmentObject(fileOperationCoordinator)
+                            .environmentObject(patchStore)
+                            .environmentObject(repositoryStore)
+                            .environment(\.appLanguage, language)
+                            .environment(\.locale, language.locale)
+                            .opacity(showOnboarding ? 0 : 1)
+                            .allowsHitTesting(!showOnboarding)
+                    } else {
+                        MoonX7LoginView(auth: licenseAuth)
+                            .opacity(showOnboarding ? 0 : 1)
+                            .allowsHitTesting(!showOnboarding)
+                    }
+                }
 
                 if showOnboarding {
                     OnboardingView {
