@@ -6,6 +6,7 @@ struct ContentView: View {
     @EnvironmentObject private var repositoryStore: PackageRepositoryStore
     @EnvironmentObject private var patchDraftCoordinator: PatchDraftCoordinator
     @State private var tab: Tab = .home
+    @State private var selectedMode: MoonX7Mode = .ffth
     @State private var filesSession = FilesTabSession()
     @State private var showSettings = false
     @State private var showLogs = false
@@ -19,12 +20,13 @@ struct ContentView: View {
                 MoonX7Home(
                     openInstalled: { tab = .installed },
                     openPreview: { tab = .previews },
+                    mode: $selectedMode,
                     settings: { showSettings = true }
                 )
                 .tag(Tab.home)
                 .tabItem { Label("Inicio", systemImage: "house.fill") }
 
-                MoonX7Installed(settings: { showSettings = true })
+                MoonX7Installed(mode: $selectedMode, settings: { showSettings = true })
                     .tag(Tab.installed)
                     .tabItem { Label("Installed", systemImage: "shippingbox.fill") }
 
@@ -308,6 +310,7 @@ private struct MoonX7Installed: View {
     @EnvironmentObject private var store: PatchProjectStore
     @State private var mode: MoonX7Mode = .ffth
     @State private var search = ""
+     @Binding var mode: MoonX7Mode
     let settings: () -> Void
 
     private var items: [PatchLibraryItem] {
